@@ -14,9 +14,23 @@ class OcTree(object):
         if bounds:
             self.bounds = bounds
         else:
-            self.bounds = np.array([self.points.min(0), self.points.max(0)])
+            self.bounds = self.get_bounds()
         self.center = (self.bounds[0] + self.bounds[1])/2
         self.children = {}
+
+    def get_bounds(self):
+        "Return bounding box of all the points"
+        if len(self.points)<=0:
+            return (-np.inf, np.inf)
+        else:
+            dim = len(self.points[0].coordinates)
+            bound_min = np.zeros(dim)
+            bound_max = np.zeros(dim)
+            for i in range(dim):
+                bound_min[i] = min(x.coordinates[i] for x in self.points)
+                bound_max[i] = max(x.coordinates[i] for x in self.points)
+            return (bound_min, bound_max)
+
 
     def generate_octants(self):
         "Split current box into new octants"
@@ -28,7 +42,7 @@ class OcTree(object):
 
     def classify_point(self, point):
         """Classify in which octant the point is included."""
-        diagonal = point - self.center
+        diagonal = point.coordinates - self.center
         octant = tuple(1 if x >= 0 else -1 for x in diagonal)
         return octant
 
@@ -36,7 +50,7 @@ class OcTree(object):
         "Append point into the tree."
         octant = self.classify_point(point)
         if len(self.children) <= 0:
-            np.append(self.points, point)
+            self.points.append(point)
         else:
             self.children[octant].append_point(point)
 
@@ -52,9 +66,9 @@ class OcTree(object):
         "Return an array of all points in the tree"
         if len(self.children) <= 0:
             return self.points
-        points = np.array([])
+        points = []
         for octree in self.children:
-            np.append(points, octree.all_points())
+            points.append(octree.all_points())
         return points
 
 
