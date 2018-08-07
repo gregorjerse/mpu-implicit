@@ -1,7 +1,10 @@
 # Fit quadric surface to a set of points
 from numpy.linalg import norm
-from numpy import dot
-from constants import n_min, q_closest_num
+from numpy import transpose, matmul
+from math import pi
+
+from .general import general_quadric_fit
+from constants import n_min
 
 
 def find_closest(q, points, n):
@@ -15,19 +18,11 @@ def find_closest(q, points, n):
     return [e[1] for e in distances[:n]]
 
 
-def test_q(q, closest_points):
+def weight(point):
     """
-    Perform a test given by the equation (9).
+    Return the value of the weight function evaluated at the point
+    point. The point is an object of type Point.
     """
-    # TODO: how about zero? Is 0, -1, -3 OK or not?
-    signs = [dot(p.normal, q - p) >= 0
-             for p in closest_points]
-    return all(signs) or not any(signs)
-
-
-def weigth(p):
-    # Weigth function at point p
-    # TODO: implement
     return 0
 
 
@@ -40,25 +35,32 @@ def get_maximal_angle_variation(points):
     return angle_variation
 
 
-def general_quadric_fit(points, cell):
-    # Return matrix A, vector b and scalar c.
-    # Quadric form.
-    # Q(x) = x^{T}Ax +b^T + c
-    # The cell is currently given as a tuple
-    # center, corner points.
-    c, qs = cell[0], cell[1:]
-    d = dict()
-    for q in qs:
-        closest = find_closest(q, points, q_closest_num)
-        if not test_q(q, closest):
-            qs.remove(q)
+def q_func(A, b, c):
+    """
+    Return a function which given a point x (a numpy array)
+    computes the value of the function Q at the point x: Q(x).
+    Q(x) =  x'A x + b' x + c
+    where ' is a transpose operator.
+    """
+    def q(x):
+        first = matmul(matmul(transpose(x), A), x)
+        second = matmul(transpose(b), x)
+        return first + second + c
+    return q
+
+
+def decide(points, cell):
+    """
+    Which quadric fit to apply?
+    """
+    if len(points) > 2 * n_min:
+        angle_variation = get_maximal_angle_variation(points)
+        if angle_variation > pi / 2:
+            # Return implementation (a)
+            return general_quadric_fit(points, cell)
         else:
-            # TODO: normal
-            d[q] = 1/6 * sum(np.dot(n, q-p))
-    # qs contains suitable auxiliary points
-    # d[q] is the distance d_i
-    
-    
-def f(x):
-    
-    
+            # TODO: implement (b)
+            return general_quadric_fit(points, cell)
+    else:
+        # TODO: implement (c)
+        return general_quadric_fit(points, cell)
