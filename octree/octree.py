@@ -2,8 +2,7 @@
 
 import numpy as np
 OCTANTS = [(1, 1, 1), (1, 1, -1), (1, -1, 1), (1, -1, -1),
-           (-1, 1, 1), (-1, 1, -1), (-1, -1, 1), (-1, -1, -1),]
-
+           (-1, 1, 1), (-1, 1, -1), (-1, -1, 1), (-1, -1, -1)]
 
 
 class OcTree(object):
@@ -20,7 +19,7 @@ class OcTree(object):
 
     def get_bounds(self):
         "Return bounding box of all the points"
-        if len(self.points)<=0:
+        if len(self.points) <= 0:
             return (-np.inf, np.inf)
         else:
             dim = len(self.points[0].coordinates)
@@ -30,7 +29,6 @@ class OcTree(object):
                 bound_min[i] = min(x.coordinates[i] for x in self.points)
                 bound_max[i] = max(x.coordinates[i] for x in self.points)
             return (bound_min, bound_max)
-
 
     def generate_octants(self):
         "Split current box into new octants"
@@ -70,5 +68,3 @@ class OcTree(object):
         for octree in self.children:
             points.append(octree.all_points())
         return points
-
-
